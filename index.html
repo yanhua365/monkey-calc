@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <title>Monkey Calc</title>
+        <meta charset="utf-8">
+        <meta name="description" content="a calc game for students.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet">
+        <script src="//cdn.jsdelivr.net/vue/2.0.1/vue.min.js"></script>
+    </head>
+    <body>
+      <div class="container" id="app">
+    <div class="header">
+      <ul class="nav nav-pills pull-right" role="tablist" >
+        <!-- <li role="presentation" class="active"><a href="#">Home</a></li> -->
+        <li class="btn-group" v-show="step==1">
+          <button type="button" class="btn btn-default" v-bind:class="{'btn-primary':operate==1}" @click="changeOperate(1)">加法</button>
+          <button type="button" class="btn btn-default " v-bind:class="{'btn-primary':operate==2}" @click="changeOperate(2)">乘法</button>
+        </li>
+        <li v-show="step==1">
+        <select class="form-control" v-model="speed">
+          <option value="5">1x速</option>
+          <option value="4">2x速</option>
+          <option value="3">3x速</option>
+          <option value="2">4x速</option>
+          <option value="1">5x速</option>
+        </select>
+      </li>
+      <li v-show="step==2 && count>0">
+        <div style="text-align:center">
+          <span class="badge">  {{count}}</span>
+        </div>
+      </li>
+      </ul>
+      <h3 class="text-muted">小猴算术</h3>
+    </div>
+    <div id="section-1" v-show="step==1" style="text-align:center;padding-top:50px">
+        <a class="btn btn-lg btn-primary" href="#" role="button" style="width:150px;" @click="go()">开始</a>
+        <br/><br/>
+        <div style="text-align:center" v-show="count>0">
+          <span class="badge">  上次做对了：{{count}} 道题</span>
+        </div>
+    </div>
+    <div id="section-2" v-show="step==2">
+
+
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" :aria-valuenow="progress" aria-valuemin="0" aria-valuemax="100" v-bind:style="{width: progress+'%'}">
+            <span class="sr-only">{{progress}}%</span>
+          </div>
+        </div>
+
+        <div class="jumbotron" style="text-align:center">
+          <div v-show="subject!=null">
+            <h1>{{!subject?"": subject.x1}}
+              <span v-show="operate==1">+</span>
+                <span v-show="operate==2">X</span>
+               {{!subject?"": subject.x2}} = {{!subject?"": subject.y}}</h1>
+
+            <br/>
+
+            <p>
+              <a class="btn btn-lg btn-danger" href="#" role="button" style="width:120px;" @click="submitResult(false)">错</a>
+              &nbsp;&nbsp;
+              <a class="btn btn-lg btn-success" href="#" role="button" style="width:120px;" @click="submitResult(true)">对</a>
+            </p>
+          </div>
+        </div>
+      </div>
+
+    <div class="footer">
+      <hr>
+      <p>&copy; yanhua 2016</p>
+    </div>
+
+  </div> <!-- /container -->
+
+  <script>
+  vm = new Vue({
+    el:"#app",
+
+    data: {
+      step: 1,
+      operate: 1, //1 加法   2 乘法
+      speed: 1,
+      count:0,
+      progress: 100,
+      subject:null
+    },
+
+    methods:{
+      go: function(){
+        var self = this;
+        self.step =2 ;
+        self.count = 0;
+        this.calc(self);
+      },
+
+      calc: function(self) {
+        if(window.itv) clearInterval(window.itv);
+        self.subject = null;
+        self.progress = 100;
+        //随机出题
+        self.subject = this.randomSubject();
+        window.itv = setInterval(function(){
+          if(self.progress > 0) {
+            self.progress = self.progress - 10;
+          }else{
+            self.judge(false);
+          }
+        },
+        200 * self.speed);
+      },
+
+      randomSubject: function(){
+        var x1 = this._random(1,9);
+        var x2 = this._random(1,9);
+        var r = (this.operate==1) ? (x1 + x2) : x1*x2;
+
+        var f = this._random(1,2);
+        var y = r;
+        if(f == 1){
+          y = (this.operate==1) ? this._random(2,18) : this._random(1,81);
+        }
+
+        return {x1: x1 , x2: x2, y: y, result:y == r};
+      },
+
+      _random: function(min,max){
+        var range = max - min;
+        var rand = Math.random();
+        return(min + Math.round(rand * range));
+      },
+
+
+      judge: function(r){
+        var self = this;
+        if(r) {
+          self.count = self.count+1;
+          self.calc(self);
+        }else{
+          if(window.itv) clearInterval(window.itv);
+          self.subject = null;
+          self.step = 1;
+        }
+      },
+
+      changeOperate: function(op) {
+        this.operate = op;
+      },
+
+
+      submitResult: function(r) {
+        if(this.subject) this.judge(r == this.subject.result);
+
+      }
+    }
+  });
+
+
+  </script>
+
+
+    </body>
+</html>
